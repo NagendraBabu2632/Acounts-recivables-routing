@@ -50,7 +50,7 @@ function CustomerCard({ customer, selected, onClick, onChat }) {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           <span style={{ fontSize:11, fontWeight:700, color:'var(--accent-blue)', fontFamily:'var(--font-mono)', minWidth:20 }}>
-            #{customer.wtp_rank}
+            #{customer.wtp_rank}-{customer.customer_id.slice(-4)}
           </span>
           <span style={{ fontSize:13, fontWeight:500 }}>{customer.name}</span>
         </div>

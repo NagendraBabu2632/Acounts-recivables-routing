@@ -302,150 +302,225 @@ function AgingChart({ invoices }) {
 }
 
 /* ── 4. Engagement radar ── */
-function EngagementRadar({ engagement }) {
+function RiskBreakdown({ data }) {
+  const tooltipRef = useRef()
+
+  useEffect(() => {
+    tooltipRef.current = makeTooltip()
+    return () => tooltipRef.current?.remove()
+  }, [])
+
+  const items = [
+    {
+      label: 'WTP',
+      value: data.wtp_score,
+      note: 'Willingness to pay score'
+    },
+    {
+      label: 'Payment Delay',
+      value: data.avg_payment_delay,
+      note: `${data.avg_payment_delay.toFixed(1)} days avg delay`
+    },
+    {
+      label: 'Credit Health',
+      value: data.credit_utilization,
+      note: `${data.credit_utilization.toFixed(0)}% utilized`
+    },
+    {
+      label: 'Dispute Risk',
+      value: data.open_dispute_count * 40,
+      note: `${data.open_dispute_count} open disputes`
+    },
+    {
+      label: 'Delinquency',
+      value: data.delinquency_risk_30d * 100,
+      note: `${(data.delinquency_risk_30d * 100).toFixed(0)}% probability`
+    }
+  ]
+
+  const getColor = (v) =>
+    v >= 70 ? '#e24b4a' : v >= 40 ? '#ef9f27' : '#639922'
+
+  const handleMove = (event, d) => {
+    tooltipRef.current
+      .style('opacity', 1)
+      .style('left', event.clientX + 12 + 'px')
+      .style('top', event.clientY - 30 + 'px')
+      .html(`
+        <b>${d.label}</b><br/>
+        Value: <b>${Math.round(d.value)}</b><br/>
+        ${d.note}
+      `)
+  }
+
+  const handleLeave = () => {
+    tooltipRef.current.style('opacity', 0)
+  }
+
+  return (
+    <div style={{ padding: 16 }}>
+      <div style={{ fontSize: 12, color: '#888', marginBottom: 14 }}>
+        RISK DIMENSION BREAKDOWN
+      </div>
+
+      {items.map((d, i) => (
+        <div
+          key={i}
+          style={{ marginBottom: 18, cursor: 'default' }}
+          onMouseMove={(e) => handleMove(e, d)}
+          onMouseLeave={handleLeave}
+        >
+          {/* top row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <div style={{ fontSize: 13, color: '#ccc' }}>{d.label}</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <span style={{ fontSize: 12, color: '#888' }}>{d.note}</span>
+              <span style={{ fontSize: 13, color: getColor(d.value), fontWeight: 600 }}>
+                {Math.round(d.value)}
+              </span>
+            </div>
+          </div>
+
+          {/* bar */}
+          <div style={{
+            height: 6,
+            background: 'rgba(255,255,255,0.08)',
+            borderRadius: 6,
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              width: `${Math.min(d.value, 100)}%`,
+              height: '100%',
+              background: getColor(d.value),
+              borderRadius: 6,
+              transition: 'width 0.6s ease'
+            }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function EngagementBarChart({ engagement }) {
   const ref = useRef()
+
   useEffect(() => {
     if (!ref.current || !engagement) return
     const el = ref.current
     d3.select(el).selectAll('*').remove()
 
-    const W  = el.getBoundingClientRect().width || 260
-    const H  = W * 0.85
-    const cx = W / 2, cy = H / 2
-    const r  = Math.min(W, H) * 0.32
-
-    const axes = [
+    const data = [
       {
-        label: 'WTP score',
-        value: engagement.wtp_score / 100,
-        raw: `${engagement.wtp_score}/100`,
-        detail: `Δ30d: ${engagement.wtp_30d_delta ?? 'N/A'}`,
+        label: 'WTP Score',
+        value: engagement.wtp_score,
+        max: 100,
+        display: `${engagement.wtp_score}/100`
       },
       {
-        label: 'Email open',
-        value: engagement.email_open_rate_30d,
-        raw: `${(engagement.email_open_rate_30d * 100).toFixed(0)}%`,
-        detail: `Last opened: ${engagement.last_email_open_daysago}d ago`,
+        label: 'Email Open Rate',
+        value: engagement.email_open_rate_30d * 100,
+        max: 100,
+        display: `${(engagement.email_open_rate_30d * 100).toFixed(0)}%`
       },
       {
-        label: 'Response speed',
-        value: Math.max(0, 1 - engagement.avg_response_hours / 96),
-        raw: `${engagement.avg_response_hours}h avg response`,
-        detail: 'Lower hours = higher score',
+        label: 'Response Speed',
+        value: Math.max(0, 100 - (engagement.avg_response_hours / 96) * 100),
+        max: 100,
+        display: `${engagement.avg_response_hours}h`
       },
       {
         label: 'Recency',
-        value: Math.max(0, 1 - engagement.last_email_open_daysago / 30),
-        raw: `${engagement.last_email_open_daysago}d since last open`,
-        detail: `Link click: ${engagement.last_link_click_daysago}d ago`,
-      },
+        value: Math.max(0, 100 - (engagement.last_email_open_daysago / 30) * 100),
+        max: 100,
+        display: `${engagement.last_email_open_daysago}d ago`
+      }
     ]
 
-    const svg = d3.select(el).append('svg')
-      .attr('width', '100%').attr('height', H)
+    const W = el.getBoundingClientRect().width || 360
+    const margin = { top: 10, right: 40, bottom: 10, left: 140 }
+    const rowH = 36
+    const H = data.length * rowH + margin.top + margin.bottom
+
+    const svg = d3.select(el)
+      .append('svg')
+      .attr('width', '100%')
+      .attr('height', H)
       .attr('viewBox', `0 0 ${W} ${H}`)
-      .style('overflow', 'visible')
 
     const tooltip = makeTooltip()
 
-    const angle = (i) => (i / axes.length) * 2 * Math.PI - Math.PI / 2
-    const ptX   = (i, v) => cx + r * v * Math.cos(angle(i))
-    const ptY   = (i, v) => cy + r * v * Math.sin(angle(i))
-const summaryHtml = `
-  <div style="font-weight:600; margin-bottom:4px;">Engagement Summary</div>
-  ${axes.map(a => `
-    <div style="margin-bottom:2px;">
-      <span style="color:#4f8ef7;">●</span>
-      <b>${a.label}</b>: ${a.raw}<br/>
-      <span style="color:#aaa; font-size:11px;">${a.detail}</span>
-    </div>
-  `).join('')}
-`
+    const x = d3.scaleLinear()
+      .domain([0, 100])
+      .range([margin.left, W - margin.right])
 
-    // rings
-    ;[0.25, 0.5, 0.75, 1].forEach(ring => {
-      const pts = axes.map((_, i) => `${ptX(i, ring)},${ptY(i, ring)}`).join(' ')
-      svg.append('polygon').attr('points', pts)
-        .attr('fill', 'none')
-        .attr('stroke', 'rgba(128,128,128,0.15)').attr('stroke-width', 1)
-        .style('pointer-events', 'none')
-    })
+    const y = d3.scaleBand()
+      .domain(data.map(d => d.label))
+      .range([margin.top, H - margin.bottom])
+      .padding(0.3)
 
-    // spokes
-    axes.forEach((_, i) => {
-      svg.append('line')
-        .attr('x1', cx).attr('y1', cy)
-        .attr('x2', ptX(i, 1)).attr('y2', ptY(i, 1))
-        .attr('stroke', 'rgba(128,128,128,0.15)').attr('stroke-width', 1)
-        .style('pointer-events', 'none')
-    })
+    // bars
+    svg.append('g')
+      .selectAll('rect')
+      .data(data)
+      .join('rect')
+      .attr('x', margin.left)
+      .attr('y', d => y(d.label))
+      .attr('height', y.bandwidth())
+      .attr('width', 0)
+      .attr('rx', 4)
+      .attr('fill', '#4f8ef7')
+      .transition()
+      .duration(600)
+      .attr('width', d => x(d.value) - margin.left)
 
-    // filled polygon — no pointer events (hit rect handles it)
-    const pts = axes.map((d, i) => `${ptX(i, d.value)},${ptY(i, d.value)}`).join(' ')
-    svg.append('polygon').attr('points', pts)
-      .attr('fill', 'rgba(79,142,247,0.18)')
-      .attr('stroke', '#4f8ef7').attr('stroke-width', 1.5)
-      .style('pointer-events', 'none')
-
-    // invisible full-area hit rect — always catches mouse, shows summary tooltip
-    svg.append('rect')
-      .attr('x', 0).attr('y', 0)
-      .attr('width', W).attr('height', H)
+    // hover
+    svg.append('g')
+      .selectAll('rect.hover')
+      .data(data)
+      .join('rect')
+      .attr('x', 0)
+      .attr('y', d => y(d.label))
+      .attr('width', W)
+      .attr('height', y.bandwidth())
       .attr('fill', 'transparent')
-      .style('pointer-events', 'all')
-      .style('cursor', 'crosshair')
-      .on('mousemove', (event) => {
-        tooltip.style('opacity', 1)
-          .style('left', (event.clientX + 14) + 'px')
-          .style('top', (event.clientY - 40) + 'px')
-          .html(summaryHtml)
+      .on('mousemove', (event, d) => {
+        tooltip
+          .style('opacity', 1)
+          .style('left', (event.clientX + 12) + 'px')
+          .style('top', (event.clientY - 30) + 'px')
+          .html(`<b>${d.label}</b><br/>${d.display}`)
       })
       .on('mouseleave', () => tooltip.style('opacity', 0))
 
-    // dots — large invisible hit area on top for individual axis tooltip
-    axes.forEach((d, i) => {
-      // invisible large hit circle
-      svg.append('circle')
-        .attr('cx', ptX(i, d.value)).attr('cy', ptY(i, d.value)).attr('r', 16)
-        .attr('fill', 'transparent')
-        .style('pointer-events', 'all')
-        .style('cursor', 'crosshair')
-        .on('mousemove', (event) => {
-          event.stopPropagation()
-          tooltip.style('opacity', 1)
-            .style('left', (event.clientX + 12) + 'px')
-            .style('top', (event.clientY - 36) + 'px')
-            .html(`<b>${d.label}</b><br/>${d.raw}<br/><span style="color:#aaa">${d.detail}</span>`)
-        })
-        .on('mouseleave', (event) => {
-          event.stopPropagation()
-          tooltip.style('opacity', 0)
-        })
+    // labels (left)
+    svg.append('g')
+      .selectAll('text.label')
+      .data(data)
+      .join('text')
+      .attr('x', margin.left - 10)
+      .attr('y', d => y(d.label) + y.bandwidth() / 2 + 4)
+      .attr('text-anchor', 'end')
+      .attr('font-size', 11)
+      .attr('fill', 'var(--text-secondary,#aaa)')
+      .text(d => d.label)
 
-      // visible dot (no pointer events — hit circle handles it)
-      svg.append('circle')
-        .attr('cx', ptX(i, d.value)).attr('cy', ptY(i, d.value)).attr('r', 5)
-        .attr('fill', '#4f8ef7')
-        .style('pointer-events', 'none')
-    })
-
-    // axis labels
-    axes.forEach((d, i) => {
-      const lx = cx + (r + 22) * Math.cos(angle(i))
-      const ly = cy + (r + 22) * Math.sin(angle(i))
-      svg.append('text')
-        .attr('x', lx).attr('y', ly + 4)
-        .attr('text-anchor', 'middle').attr('font-size', 10)
-        .attr('fill', 'var(--text-secondary,#aaa)')
-        .style('pointer-events', 'none')
-        .text(d.label)
-    })
+    // values (right)
+    svg.append('g')
+      .selectAll('text.value')
+      .data(data)
+      .join('text')
+      .attr('x', d => x(d.value) + 6)
+      .attr('y', d => y(d.label) + y.bandwidth() / 2 + 4)
+      .attr('font-size', 11)
+      .attr('fill', 'var(--text-muted,#888)')
+      .text(d => d.display)
 
     return () => tooltip.remove()
   }, [engagement])
+
   return <div ref={ref} style={{ width: '100%' }} />
 }
-
 /* ── 5. Dispute summary bars ── */
 function DisputeChart({ disputes }) {
   const ref = useRef()
@@ -586,8 +661,9 @@ export default function AccountDashboard({ data }) {
 
       {/* ── Engagement radar ── */}
       <div style={card}>
-        <div style={secLabel}>Engagement radar</div>
-        <EngagementRadar engagement={engagement} />
+        {/* <div style={secLabel}>Engagement radar</div> */}
+        {/* <EngagementRadar  engagement={engagement} /> */}
+       <RiskBreakdown data={data} />
         <div style={{ marginTop: 4, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
           Trend: <span style={{ color: '#e24b4a' }}>{engagement?.engagement_trend?.replace(/_/g, ' ')}</span>
           &nbsp;·&nbsp; Best contact: <b style={{ color: 'var(--text-primary)' }}>{engagement?.best_contact_time}</b>

@@ -11,7 +11,7 @@ export default function WTPView({
 }) {
   return (
     <div style={{  overflow:'hidden', display:'grid',
-            gridTemplateColumns:'260px 1fr 260px', height:'100%' }}>
+            gridTemplateColumns:'300px 1fr', height:'100%' }}>
 
       {/* Left */}
       <div style={{ borderRight:'1px solid var(--border)' ,overflow: 'auto'}}>
@@ -29,12 +29,6 @@ export default function WTPView({
         selectedCustomer={chatCustomer}
         initialQuery={chatQuery}
       />
-
-      {/* Right */}
-      <div style={{ borderLeft:'1px solid var(--border)' }}>
-        <CustomerDetail customer={chatCustomer}  onChat={handleChatQuery} />
-      </div>
-
     </div>
   );
 }

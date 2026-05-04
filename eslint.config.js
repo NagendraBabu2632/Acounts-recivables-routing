@@ -23,7 +23,7 @@ export default defineConfig([
       },
     },
     rules: {
-       'no-undef': 'off',
+        'react-hooks/set-state-in-effect': 'off',
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },

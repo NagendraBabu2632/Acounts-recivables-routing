@@ -19,11 +19,9 @@ export default function PTPView({
                              refreshKey={refreshKey}
                              onSelectCustomer={(c) => { selectCustomer(c); setView('worklist') }}
                              onChat={(q, cid) => {
-                               const match = customers.find(x => x.customer_id === cid)
-                               if (match) setChatCustomer(match)
-                               handleChatQuery(q, match || null)
-                              onChat(q, match || null)
-                             }}
+  const match = customers.find(x => x.customer_id === cid)
+  handleChatQuery(q, match || null)
+}}
                            />
                          </div>
                          {/* Right panel: customer detail if selected, else activity log */}

@@ -10,13 +10,14 @@ export default function ChatView({
   handleChatQuery,
   loadingPortfolio,
   chatQuery,
-  bulkCustomers
+  bulkCustomers,
+  handleDataUpdate
 }) {
 console.log("ChatView render bulkcustomers", { bulkCustomers });
 
   return (
     <div style={{ flex:1, overflow:'hidden', display:'grid',
-            gridTemplateColumns:'260px 1fr 260px', height:'100%' }}>
+            gridTemplateColumns:'300px 1fr', height:'100%' }}>
                <div style={{ borderRight:'1px solid var(--border)', overflow:'hidden' }}>
       <RiskWorklist
         customers={customers}
@@ -33,11 +34,9 @@ console.log("ChatView render bulkcustomers", { bulkCustomers });
       <ChatInterface
         selectedCustomer={chatCustomer}
         initialQuery={chatQuery}
+        onDataUpdate={handleDataUpdate}
       />
 </div>
-<div style={{ borderLeft:'1px solid var(--border)', overflow:'hidden' }}>
-      <CustomerDetail customer={chatCustomer} onChat={handleChatQuery}/>
-      </div>
     </div>
   );
 }

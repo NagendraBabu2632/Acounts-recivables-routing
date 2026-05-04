@@ -30,7 +30,8 @@ const role = user?.role;
   const [chatCustomer, setChatCustomer] = useState(null);
   const [chatQuery, setChatQuery] = useState(null);
   const [loadingPortfolio, setLoadingPortfolio] = useState(false);
-  const [refreshKey, _setRefreshKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
+  
 
   // Auth check
   // useEffect(() => {
@@ -77,14 +78,21 @@ const role = user?.role;
 }, [customers]);
 
   const handleChatQuery = (query, customer) => {
-     navigate("/app/chat");
+    
      if(customer) {
       setChatCustomer(customer);
        selectCustomer(customer);
  
      }
       setChatQuery(query);
+       navigate("/app/chat");
   };
+
+    const handleDataUpdate = useCallback((res) => {
+    if (res.portfolio_data) setCustomers(res.portfolio_data)
+    setRefreshKey(k => k + 1)
+  }, [])
+
 
  const handleChatQuery1 = (query, customer) => {
   navigate("/app/wtp");
@@ -137,6 +145,7 @@ const role = user?.role;
                   loadingPortfolio={loadingPortfolio}
                   chatQuery={chatQuery}
                   bulkCustomers={bulkCustomers}
+                  onDataUpdate={handleDataUpdate}
                 />) : <Navigate to="/app/unauthorized" />
               ) 
             }
