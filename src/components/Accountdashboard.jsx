@@ -605,6 +605,7 @@ function DisputeChart({ disputes }) {
 
 /* ── Main component ── */
 export default function AccountDashboard({ data }) {
+  if (!data || data.error) return null 
   if (!data) return null
 
   const {
@@ -635,9 +636,9 @@ export default function AccountDashboard({ data }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
         {[
           { label: 'Total Open AR',    value: `₹${(total_open_inr / 100000).toFixed(1)}L`,   color: '#e24b4a' },
-          { label: 'Delinquency Risk', value: `${(delinquency_risk_30d * 100).toFixed(0)}%`, color: riskColor },
+          { label: 'Delinquency Risk', value: `${((delinquency_risk_30d || 0) * 100).toFixed(0)}%`, color: riskColor },
           { label: 'WTP Score',        value: wtp_score,                                       color: wtpColor  },
-          { label: 'Avg Delay',        value: `${avg_payment_delay.toFixed(0)}d`,             color: avg_payment_delay >= 60 ? '#e24b4a' : '#ef9f27' },
+          { label: 'Avg Delay',        value: `${(avg_payment_delay || 0).toFixed(0)}d`,             color: avg_payment_delay >= 60 ? '#e24b4a' : '#ef9f27' },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ ...card, textAlign: 'center' }}>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>

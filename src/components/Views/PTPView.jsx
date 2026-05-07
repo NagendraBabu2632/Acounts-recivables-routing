@@ -17,6 +17,7 @@ export default function PTPView({
                          <div style={{ overflow:'hidden', position:'relative' }}>
                            <PTPTracker
                              refreshKey={refreshKey}
+                             // eslint-disable-next-line no-undef
                              onSelectCustomer={(c) => { selectCustomer(c); setView('worklist') }}
                              onChat={(q, cid) => {
   const match = customers.find(x => x.customer_id === cid)

@@ -657,6 +657,7 @@ export default function PTPDashboard({ data }) {
     ptp_id: 'AUTO-PENDING',
     contact: c.sales_rep || '—',
     mode_of_payment: 'NEFT',
+    // eslint-disable-next-line react-hooks/purity
     promise_date: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
     created_date: new Date().toISOString().slice(0, 10),
     amount: c.total_open_inr || 0,

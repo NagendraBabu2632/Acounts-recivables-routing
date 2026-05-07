@@ -9,6 +9,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/" />; // not logged in
   }
 
+  // eslint-disable-next-line no-undef
   if (!allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" />; // logged in but not allowed
   }

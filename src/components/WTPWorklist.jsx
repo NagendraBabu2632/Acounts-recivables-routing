@@ -68,9 +68,9 @@ function CustomerCard({ customer, selected, onClick, onChat }) {
       {/* Stats row */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, marginBottom:8 }}>
         {[
-          { label:'Delinquency risk', value:`${(customer.delinquency_risk_30d*100).toFixed(0)}%`, color: delinqHigh ? 'var(--risk-critical)' : 'var(--text-secondary)' },
-          { label:'Overdue', value:`₹${(customer.total_open_inr/100000).toFixed(1)}L`, color:'var(--text-secondary)' },
-          { label:'Channel', value: customer.preferred_channel?.toUpperCase(), color:'var(--accent-teal)' },
+          { label:'Delinquency risk', value:`${((customer.delinquency_risk_30d ?? 0)*100).toFixed(0)}%`, color: delinqHigh ? 'var(--risk-critical)' : 'var(--text-secondary)' },
+{ label:'Overdue', value:`₹${((customer.total_open_inr ?? 0)/100000).toFixed(1)}L`, color:'var(--text-secondary)' },
+{ label:'Channel', value: customer.preferred_channel?.toUpperCase() ?? '—', color:'var(--accent-teal)' },
         ].map(s => (
           <div key={s.label}>
             <div style={{ fontSize:9, color:'var(--text-muted)' }}>{s.label}</div>

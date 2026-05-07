@@ -18,8 +18,11 @@ import EmailInbox from "./components/EmailInbox";
 import DisputeBoard from "./components/DisputeBoard";
 import WTPWorklist from "./components/WTPWorklist";
 import WTPView from "./components/Views/WTPView";
+import TopBar from "./components/TopBar";
+import BootScreen from "./components/BootScreen";
 
 export default function App() {
+  const [booting, setBooting] = useState(true)
   const navigate = useNavigate();
 const { user } = useAuth();
 const role = user?.role;
@@ -108,35 +111,38 @@ const role = user?.role;
     setChatCustomer(c);
   };
 
-  return (
-    <div style={{  display:'flex', height:'100vh', overflow:'hidden' }}>
-      <Sidebar setChatQuery={setChatQuery} />
+  if (booting) {
+  return <BootScreen onDone={() => setBooting(false)} />
+}
 
-      <div style={{ flex: 1 }}>
+ return (
+  <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <Sidebar setChatQuery={setChatQuery} />
+
+    {/* ← Only this wrapper div changes: flex column + TopBar added */}
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <TopBar />
+
+      <div style={{ flex: 1, overflow: 'auto' }}>
         <Routes>
           <Route index element={<Navigate to="dashboard" />} />
 
-          <Route
-            path="dashboard"
-            element={
-              <DashboardView
-                customers={customers}
-                agingData={agingData}
-                summary={summary}
-                selectedCustomer={selectedCustomer}
-                onSelect={selectCustomer}
-                onChat={handleChatQuery}
-                loading={loadingPortfolio}
-                refreshKey={refreshKey}
-              />
-            }
-          />
+          <Route path="dashboard" element={
+            <DashboardView
+              customers={customers}
+              agingData={agingData}
+              summary={summary}
+              selectedCustomer={selectedCustomer}
+              onSelect={selectCustomer}
+              onChat={handleChatQuery}
+              loading={loadingPortfolio}
+              refreshKey={refreshKey}
+            />
+          } />
 
-          <Route
-            path="chat"
-            element={
-               (
-                role === "admin" || role === "Admin" ?( <ChatView
+          <Route path="chat" element={
+            role === "admin" || role === "Admin"
+              ? <ChatView
                   customers={customers}
                   chatCustomer={chatCustomer}
                   setChatCustomer={setChatCustomer}
@@ -146,84 +152,75 @@ const role = user?.role;
                   chatQuery={chatQuery}
                   bulkCustomers={bulkCustomers}
                   onDataUpdate={handleDataUpdate}
-                />) : <Navigate to="/app/unauthorized" />
-              ) 
-            }
-          />
+                />
+              : <Navigate to="/app/unauthorized" />
+          } />
 
-          <Route
-            path="worklist"
-            element={
-              <WorklistView
-                customers={customers}
-                selectedCustomer={selectedCustomer}
-                onSelect={selectCustomer}
-                onChat={handleChatQuery}
-              />
-            }
-          />
+          <Route path="worklist" element={
+            <WorklistView
+              customers={customers}
+              selectedCustomer={selectedCustomer}
+              onSelect={selectCustomer}
+              onChat={handleChatQuery}
+            />
+          } />
 
-          <Route path="ptp" element={ <PTPView
-      customers={customers}
-      selectedCustomer={selectedCustomer}
-      selectCustomer={selectCustomer}
-      handleChatQuery={handleChatQuery}
-         onChat={handleChatQuery}
-      refreshKey={refreshKey}
-    />} />
-          <Route path="log" element={ <LogView
-      customers={customers}
-      selectedCustomer={selectedCustomer}
-      onSelect={selectCustomer}
-      onChat={handleChatQuery}
-      refreshKey={refreshKey}
-    />} />
-    
-      <Route
-    path="email"
-    element={
-      <EmailInbox
-        onChat={handleChatQuery}
-        onSelectCustomer={(c) => {
-          setSelectedCustomer(c);
-          setChatCustomer(c);
-        }}
-      />
-    }
-  />
-  <Route
-    path="disputes"
-    element={
-      <DisputeBoard
-        onChat={handleChatQuery}
-        onSelectCustomer={(c) => {
-          setSelectedCustomer(c);
-          setChatCustomer(c);
-        }}
-      />
-    }
-  />
+          <Route path="ptp" element={
+            <PTPView
+              customers={customers}
+              selectedCustomer={selectedCustomer}
+              selectCustomer={selectCustomer}
+              handleChatQuery={handleChatQuery}
+              onChat={handleChatQuery}
+              refreshKey={refreshKey}
+            />
+          } />
 
-<Route
-  path="wtp"
-  element={
-    <WTPView
-      chatCustomer={chatCustomer}
-      chatQuery={chatQuery}
-      setChatCustomer={setChatCustomer}
-      selectCustomer={selectCustomer}
-      handleChatQuery={handleChatQuery1}
-    />
-  }
-/>
+          <Route path="log" element={
+            <LogView
+              customers={customers}
+              selectedCustomer={selectedCustomer}
+              onSelect={selectCustomer}
+              onChat={handleChatQuery}
+              refreshKey={refreshKey}
+            />
+          } />
 
-  
-  <Route path="/unauthorized" element={<Unauthorized />} />
-    <Route path="*" element={<NotFound />} />
-  
+          <Route path="email" element={
+            <EmailInbox
+              onChat={handleChatQuery}
+              onSelectCustomer={(c) => {
+                setSelectedCustomer(c);
+                setChatCustomer(c);
+              }}
+            />
+          } />
+
+          <Route path="disputes" element={
+            <DisputeBoard
+              onChat={handleChatQuery}
+              onSelectCustomer={(c) => {
+                setSelectedCustomer(c);
+                setChatCustomer(c);
+              }}
+            />
+          } />
+
+          <Route path="wtp" element={
+            <WTPView
+              chatCustomer={chatCustomer}
+              chatQuery={chatQuery}
+              setChatCustomer={setChatCustomer}
+              selectCustomer={selectCustomer}
+              handleChatQuery={handleChatQuery1}
+            />
+          } />
+
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
-        
       </div>
     </div>
-  );
+  </div>
+);
 }
